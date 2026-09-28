@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Registration & Result Portal (Bootstrap)</title>
+
+<!-- Bootstrap 5 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  /* ---- Pink theme overrides on top of Bootstrap ---- */
+  :root{
+    --bs-primary:#C2617D;
+    --bs-primary-rgb:194,97,125;
+    --bs-body-bg:#FDF2F5;
+    --bs-border-color:#F0D6DE;
+  }
+  body{
+    background:var(--bs-body-bg);
+    font-family:'Inter',sans-serif;
+    color:#4A2C35;
+  }
+  h1, h2, .fw-heading{
+    font-family:'Fraunces',serif;
+  }
+  header.site-header{
+    background:#C2617D;
+    color:#fff;
+    padding:2rem 1rem;
+    text-align:center;
+  }
+  header.site-header p{ color:#F8DCE4; margin:0; }
+  .card{ border-color:var(--bs-border-color); }
+  .card-header{
+    background:#fff;
+    border-bottom:2px solid #C2617D;
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    color:#C2617D;
+  }
+  .btn-primary{ background:#C2617D; border-color:#C2617D; }
+  .btn-primary:hover{ background:#A84F68; border-color:#A84F68; }
+  .btn-outline-secondary{ color:#C2617D; border-color:#C2617D; }
+  .btn-outline-secondary:hover{ background:#FBE6EC; color:#A84F68; border-color:#C2617D; }
+  .form-control:focus, .form-select:focus{
+    border-color:#E8A0B4;
+    box-shadow:0 0 0 0.2rem rgba(194,97,125,0.25);
+  }
+  table thead th{ background:#C2617D; color:#fff; }
+  .badge-pass{ background:#EAF4EE; color:#5E9C7C; }
+  .badge-fail{ background:#FBE6E9; color:#B14A5C; }
+  #subjectsWrap{ display:none; }
+  #resultSection{ display:none; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <h1>🎓 Student Registration &amp; Result Portal</h1>
+  <p>Enter your details, choose a course and record your marks</p>
+</header>
+
+<main class="container my-4" style="max-width:900px;">
+
+  <!-- ============ REGISTRATION FORM ============ -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header">📝 Student Registration</div>
+    <div class="card-body">
+
+      <div id="formAlert" class="alert alert-danger d-none" role="alert"></div>
+
+      <form id="regForm" class="row g-3" novalidate>
+
+        <div class="col-md-6">
+          <label for="fullName" class="form-label fw-semibold">Full Name</label>
+          <input type="text" class="form-control" id="fullName" name="fullName"
+                 pattern="[A-Za-z ]{3,50}" required
+                 placeholder="e.g. Krupakar Reddy">
+          <div class="form-text">Letters and spaces only, 3–50 characters</div>
+        </div>
+
+        <div class="col-md-6">
+          <label for="rollNo" class="form-label fw-semibold">Roll Number</label>
+          <input type="text" class="form-control" id="rollNo" name="rollNo"
+                 pattern="[A-Za-z0-9]{5,15}" required
+                 placeholder="e.g. 111424148034">
+        </div>
+
+        <div class="col-md-6">
+          <label for="email" class="form-label fw-semibold">Email</label>
+          <input type="email" class="form-control" id="email" name="email" required
+                 placeholder="name@example.com">
+        </div>
+
+        <div class="col-md-6">
+          <label for="phone" class="form-label fw-semibold">Phone Number</label>
+          <input type="tel" class="form-control" id="phone" name="phone"
+                 pattern="[0-9]{10}" required
+                 placeholder="10-digit number">
+        </div>
+
+        <div class="col-md-6">
+          <label for="dob" class="form-label fw-semibold">Date of Birth</label>
+          <input type="date" class="form-control" id="dob" name="dob" required>
+        </div>
+
+        <div class="col-md-6">
+          <label for="course" class="form-label fw-semibold">Course</label>
+          <select class="form-select" id="course" name="course" required>
+            <option value="" disabled selected>Select a course</option>
+            <option value="cse">B.E. CSE</option>
+            <option value="aiml">B.E. CSE (AI &amp; ML)</option>
+            <option value="ece">B.E. ECE</option>
+            <option value="mech">B.E. Mechanical</option>
+          </select>
+        </div>
+
+        <!-- ============ SUBJECT MARKS (built by JS once a course is picked) ============ -->
+        <div class="col-12" id="subjectsWrap">
+          <h2 class="h5 mt-2 fw-heading">📚 Subject Marks</h2>
+          <table class="table table-bordered align-middle">
+            <thead>
+              <tr><th>Subject</th><th style="width:160px;">Marks (out of 100)</th></tr>
+            </thead>
+            <tbody><!-- rows injected by JS --></tbody>
+          </table>
+        </div>
+
+        <div class="col-12 d-flex gap-2 flex-wrap">
+          <button type="submit" class="btn btn-primary">✅ Submit &amp; View Result</button>
+          <button type="reset" id="resetBtn" class="btn btn-outline-secondary">🔄 Reset Form</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ============ RESULT DISPLAY ============ -->
+  <div class="card shadow-sm mb-4" id="resultSection">
+    <div class="card-header">📊 Result Summary</div>
+    <div class="card-body">
+      <div class="alert alert-success" id="resultAlert"></div>
+
+      <div class="row mb-3">
+        <div class="col-6 col-md-3">
+          <div class="text-uppercase text-muted small">Name</div>
+          <div id="outName" class="fw-semibold"></div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="text-uppercase text-muted small">Roll No.</div>
+          <div id="outRoll" class="fw-semibold"></div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="text-uppercase text-muted small">Course</div>
+          <div id="outCourse" class="fw-semibold"></div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="text-uppercase text-muted small">Email</div>
+          <div id="outEmail" class="fw-semibold"></div>
+        </div>
+      </div>
+
+      <table class="table table-bordered">
+        <thead><tr><th>Subject</th><th class="text-end">Marks</th></tr></thead>
+        <tbody id="resultBody"></tbody>
+        <tfoot>
+          <tr class="fw-bold"><td>Total</td><td class="text-end" id="outTotal"></td></tr>
+          <tr class="fw-bold"><td>Percentage</td><td class="text-end" id="outPercent"></td></tr>
+        </tfoot>
+      </table>
+
+      <span id="outBadge" class="badge rounded-pill px-3 py-2 fs-6"></span>
+    </div>
+  </div>
+
+</main>
+
+<!-- Bootstrap JS bundle (needed only if you add dropdowns/modals later; harmless to include) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Predefined subjects per course
+  const SUBJECTS = {
+    cse:  ["Data Structures", "DBMS", "Operating Systems", "Computer Networks", "OOP with Java"],
+    aiml: ["Machine Learning", "Deep Learning", "Python for AI", "Statistics", "NLP Basics"],
+    ece:  ["Signals & Systems", "Digital Electronics", "Microprocessors", "VLSI Design", "Communication Systems"],
+    mech: ["Thermodynamics", "Fluid Mechanics", "Machine Design", "Manufacturing Tech", "Strength of Materials"]
+  };
+
+  const courseSelect   = document.getElementById('course');
+  const subjectsWrap   = document.getElementById('subjectsWrap');
+  const subjectsBody   = document.querySelector('#subjectsWrap tbody');
+  const form           = document.getElementById('regForm');
+  const formAlert      = document.getElementById('formAlert');
+  const resultSection  = document.getElementById('resultSection');
+
+  // Build the marks-entry rows whenever the course changes
+  courseSelect.addEventListener('change', () => {
+    const subjects = SUBJECTS[courseSelect.value] || [];
+    subjectsBody.innerHTML = '';
+    subjects.forEach((subj, i) => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${subj}</td>
+        <td><input type="number" class="form-control markInput" min="0" max="100" required
+             data-subject="${subj}" id="mark${i}"></td>`;
+      subjectsBody.appendChild(row);
+    });
+    subjectsWrap.style.display = subjects.length ? 'block' : 'none';
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    formAlert.classList.add('d-none');
+
+    // COMMON MISTAKE: with Bootstrap's own validation styling (was-validated), people
+    // forget the JS side still needs checkValidity() — Bootstrap only draws the red/green
+    // borders via CSS, it doesn't stop your own preventDefault() submit handler for you.
+    form.classList.add('was-validated');
+    if (!form.checkValidity()) {
+      formAlert.textContent = 'Please fill every field correctly before submitting.';
+      formAlert.classList.remove('d-none');
+      form.reportValidity();
+      return;
+    }
+
+    const marks = Array.from(document.querySelectorAll('.markInput')).map(inp => ({
+      subject: inp.dataset.subject,
+      value: Number(inp.value)
+    }));
+
+    const total   = marks.reduce((sum, m) => sum + m.value, 0);
+    const percent = (total / (marks.length * 100)) * 100;
+    const passed  = marks.every(m => m.value >= 35);
+
+    document.getElementById('outName').textContent   = document.getElementById('fullName').value;
+    document.getElementById('outRoll').textContent    = document.getElementById('rollNo').value;
+    document.getElementById('outEmail').textContent   = document.getElementById('email').value;
+    document.getElementById('outCourse').textContent  = courseSelect.options[courseSelect.selectedIndex].text;
+
+    const resultBody = document.getElementById('resultBody');
+    resultBody.innerHTML = '';
+    marks.forEach(m => {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td>${m.subject}</td><td class="text-end">${m.value}</td>`;
+      resultBody.appendChild(row);
+    });
+
+    document.getElementById('outTotal').textContent   = `${total} / ${marks.length * 100}`;
+    document.getElementById('outPercent').textContent = `${percent.toFixed(2)}%`;
+
+    const badge = document.getElementById('outBadge');
+    badge.textContent = passed ? '✅ PASS' : '❌ FAIL';
+    badge.className = 'badge rounded-pill px-3 py-2 fs-6 ' + (passed ? 'badge-pass' : 'badge-fail');
+
+    document.getElementById('resultAlert').textContent =
+      passed ? 'Registration complete — result generated successfully.'
+             : 'Registration complete — one or more subjects are below the pass mark.';
+
+    resultSection.style.display = 'block';
+    resultSection.scrollIntoView({ behavior: 'smooth' });
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    subjectsWrap.style.display = 'none';
+    subjectsBody.innerHTML = '';
+    resultSection.style.display = 'none';
+    formAlert.classList.add('d-none');
+    form.classList.remove('was-validated');
+  });
+</script>
+
+</body>
+</html>
